@@ -1,0 +1,51 @@
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+public class UDP2Server {
+Run|Debug
+    public static void main(String[] args) {
+        DatagramSocket socket = null;
+        Scanner scan = null;
+
+        try {
+            socket = new DatagramSocket(5656); // bind to port
+            scan = new Scanner(System.in);
+            System.out.println("Server started. Waiting for client...");
+
+            byte[] receiveBuffer = new byte[1024];
+            byte[] sendBuffer;
+
+            while (true) {
+                // Receive message from client
+                DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+                socket.receive(receivePacket);
+
+                String str = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                System.out.println("Client ---> " + str);
+
+                if (str.equalsIgnoreCase("bye")) {
+                    System.out.println("Client messaged BYE... Exiting");
+                    break;
+                }
+
+                // Prepare reply
+                System.out.print("Enter your message: ");
+                String reply = scan.nextLine();
+                sendBuffer = reply.getBytes();
+
+                // Send reply to client's IP and port
+                InetAddress clientAddr = receivePacket.getAddress();
+                int clientPort = receivePacket.getPort();
+                DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, clientAddr, clientPort);
+                socket.send(sendPacket);
+            }
+
+        } catch (IOException e) {
+            System.out.println("Server Error: " + e);
+        } finally {
+            if (scan != null) scan.close();
+            if (socket != null) socket.close();
+        }
+    }
+}
